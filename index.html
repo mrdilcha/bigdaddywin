@@ -1,0 +1,228 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bigdaddy Vip Hack</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 24px;
+            color: #0056b3;
+        }
+        .countdown-container {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: gold;
+            padding: 20px;
+            border-radius: 10px;
+            width: 120px;
+            margin: 20px auto;
+        }
+        .period-number {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .prediction {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 12px;
+            font-size: 1.2em;
+            border-radius: 5px;
+            color: white;
+            width: 90px;
+            text-align: center;
+        }
+        .visit-site-btn {
+            display: inline-block;
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 12px 24px;
+            color: white;
+            background-color: #0056b3;
+            text-align: center;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+        .scroll-container {
+            margin-top: 40px;
+            max-height: 50vh;
+            overflow-y: auto;
+            padding-top: 10px;
+            border-top: 2px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .period {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+        }
+        /* Popup */
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .popup-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .popup-content button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            cursor: pointer;
+        }
+        .visit-site-popup {
+            background-color: #0056b3;
+            color: white;
+        }
+        .close-popup {
+            background-color: #999;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1> Bigdaddy Vip Hack</h1>
+        <div id="countdown" class="countdown-container">60s</div>
+        <div id="currentPeriod" class="period-number">Calculating...</div>
+        <a href="www.google.com" class="visit-site-btn">Visit Site</a>
+        <div class="scroll-container">
+            <div id="previousPeriods"></div>
+        </div>
+    </div>
+
+    <!-- Popup -->
+    <div class="popup" id="popup">
+        <div class="popup-content">
+            <p>You are not registered through our link.
+This prediction will only work if you are registered through our official link.
+Please register under our link and deposit a minimum of 100 INR first.
+Click on visit site to register in diu win.</p>
+            <button class="visit-site-popup" onclick="visitSite()">Visit Site</button>
+            <button class="close-popup" onclick="closePopup()">Close Popup</button>
+        </div>
+    </div>
+
+    <audio id="beep" src="beep.mp3"></audio>
+
+    <script>
+        const basePeriodNumber = 20241112100010297n;
+        const baseTime = new Date("2024-11-12T10:26:00+05:30");
+        const countdownElement = document.getElementById("countdown");
+        const beepSound = document.getElementById("beep");
+
+        let currentPrediction = getRandomPrediction();
+        let previousPredictions = Array.from({ length: 10 }, () => getRandomPrediction()); // 10 previous periods
+
+        function getRandomPrediction() {
+            const prediction = Math.random() < 0.5 ? "BIG" : "SMALL";
+            const color = Math.random() < 0.5 ? "red" : "green"; // Random color independent of prediction
+            return { prediction, color };
+        }
+
+        function calculatePeriodNumber() {
+            const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+            const elapsedMinutes = Math.floor((now - baseTime) / 60000);
+            const periodIncrement = BigInt(elapsedMinutes);
+            return basePeriodNumber + periodIncrement;
+        }
+
+        function updatePeriods() {
+            const currentPeriod = calculatePeriodNumber();
+
+            // Move current prediction to previous before updating
+            previousPredictions.unshift(currentPrediction);
+            if (previousPredictions.length > 10) previousPredictions.pop(); // Only keep 10 previous periods
+
+            // Display the current period and prediction
+            document.getElementById("currentPeriod").innerHTML = `
+                ${currentPeriod}
+                <span class="prediction" style="background-color: ${currentPrediction.color};">${currentPrediction.prediction}</span>
+            `;
+
+            // Display previous periods with predictions
+            document.getElementById("previousPeriods").innerHTML = previousPredictions.map((prev, index) => `
+                <div class="period">
+                    ${currentPeriod - BigInt(index + 1)}
+                    <span class="prediction" style="background-color: ${prev.color};">${prev.prediction}</span>
+                </div>
+            `).join('');
+
+            // After 1.5 seconds, generate new random prediction for current
+            setTimeout(() => {
+                currentPrediction = getRandomPrediction();
+            }, 1500);
+        }
+
+        function startCountdown() {
+            const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+            let secondsLeft = 60 - now.getSeconds();
+
+            countdownElement.textContent = `${secondsLeft}s`;
+
+            const interval = setInterval(() => {
+                countdownElement.textContent = `${secondsLeft}s`;
+
+                if (secondsLeft <= 5 && secondsLeft > 0) {
+                    beepSound.play();
+                }
+
+                if (secondsLeft === 0) {
+                    updatePeriods();
+                    secondsLeft = 60;
+                } else {
+                    secondsLeft--;
+                }
+            }, 1000);
+        }
+
+        function visitSite() {
+            window.location.href = 'https://diuwin.bet/#/register?invitationCode=344863925441'; // Placeholder website
+        }
+
+        function closePopup() {
+            document.getElementById("popup").style.display = "none";
+        }
+
+        window.onload = function() {
+            updatePeriods();
+            startCountdown();
+        };
+    </script>
+</body>
+</html>
