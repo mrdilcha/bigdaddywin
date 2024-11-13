@@ -1,265 +1,200 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2 } from 'lucide-react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prediction System</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
 
-// Generate 10,000 outcomes with patterns
-const generateOutcomes = () => {
-  const outcomes = [];
-  const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-  
-  let lastNum = numbers[Math.floor(Math.random() * numbers.length)];
-  let secondLastNum = numbers[Math.floor(Math.random() * numbers.length)];
-  
-  for (let i = 0; i < 10000; i++) {
-    let size, color, nextNumber;
-    const sum = lastNum + secondLastNum;
-    
-    // Size patterns (Big: 5-9, Small: 0-4)
-    if (sum > 10) {
-      nextNumber = Math.random() < 0.8 ? 
-        numbers.slice(5).randomElement() :  // 5-9
-        numbers.slice(0, 5).randomElement(); // 0-4
-    } else {
-      nextNumber = Math.random() < 0.8 ? 
-        numbers.slice(0, 5).randomElement() : // 0-4
-        numbers.slice(5).randomElement();     // 5-9
-    }
-    
-    size = nextNumber >= 5 ? 'Big' : 'Small';
-    
-    // Color patterns
-    if (lastNum % 2 === 0 && secondLastNum % 2 === 0) {
-      color = Math.random() < 0.7 ? 'Red' : 'Green';
-    } else if (lastNum % 2 === 1 && secondLastNum % 2 === 1) {
-      color = Math.random() < 0.7 ? 'Green' : 'Red';
-    } else {
-      color = Math.random() < 0.5 ? 'Red' : 'Green';
-    }
-    
-    outcomes.push({
-      secondLast: secondLastNum,
-      last: lastNum,
-      result: { size, color, number: nextNumber }
-    });
-    
-    secondLastNum = lastNum;
-    lastNum = nextNumber;
-  }
-  
-  return outcomes;
-};
+  <div id="root"></div>
 
-// Add this helper method to Array prototype
-Array.prototype.randomElement = function() {
-  return this[Math.floor(Math.random() * this.length)];
-};
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-// Analyze patterns in the data
-const analyzePatterns = (outcomes) => {
-  const patterns = {};
-  
-  outcomes.forEach(outcome => {
-    const key = `${outcome.secondLast},${outcome.last}`;
-    if (!patterns[key]) {
-      patterns[key] = {
-        big: 0,
-        small: 0,
-        red: 0,
-        green: 0,
-        numbers: Array(10).fill(0),
-        total: 0
+    const generateOutcomes = () => {
+      const outcomes = [];
+      const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+      
+      let lastNum = numbers[Math.floor(Math.random() * numbers.length)];
+      let secondLastNum = numbers[Math.floor(Math.random() * numbers.length)];
+      
+      for (let i = 0; i < 10000; i++) {
+        let size, color, nextNumber;
+        const sum = lastNum + secondLastNum;
+        
+        if (sum > 10) {
+          nextNumber = Math.random() < 0.8 ? 
+            numbers.slice(5).sort(() => 0.5 - Math.random())[0] :  
+            numbers.slice(0, 5).sort(() => 0.5 - Math.random())[0];
+        } else {
+          nextNumber = Math.random() < 0.8 ? 
+            numbers.slice(0, 5).sort(() => 0.5 - Math.random())[0] : 
+            numbers.slice(5).sort(() => 0.5 - Math.random())[0];
+        }
+        
+        size = nextNumber >= 5 ? 'Big' : 'Small';
+        
+        if (lastNum % 2 === 0 && secondLastNum % 2 === 0) {
+          color = Math.random() < 0.7 ? 'Red' : 'Green';
+        } else if (lastNum % 2 === 1 && secondLastNum % 2 === 1) {
+          color = Math.random() < 0.7 ? 'Green' : 'Red';
+        } else {
+          color = Math.random() < 0.5 ? 'Red' : 'Green';
+        }
+        
+        outcomes.push({
+          secondLast: secondLastNum,
+          last: lastNum,
+          result: { size, color, number: nextNumber }
+        });
+        
+        secondLastNum = lastNum;
+        lastNum = nextNumber;
+      }
+      
+      return outcomes;
+    };
+
+    const analyzePatterns = (outcomes) => {
+      const patterns = {};
+      
+      outcomes.forEach(outcome => {
+        const key = `${outcome.secondLast},${outcome.last}`;
+        if (!patterns[key]) {
+          patterns[key] = {
+            big: 0,
+            small: 0,
+            red: 0,
+            green: 0,
+            numbers: Array(10).fill(0),
+            total: 0
+          };
+        }
+        
+        patterns[key][outcome.result.size.toLowerCase()]++;
+        patterns[key][outcome.result.color.toLowerCase()]++;
+        patterns[key].numbers[outcome.result.number]++;
+        patterns[key].total++;
+      });
+      
+      return patterns;
+    };
+
+    const PredictionSystem = () => {
+      const [lastNumber, setLastNumber] = useState('');
+      const [secondLastNumber, setSecondLastNumber] = useState('');
+      const [prediction, setPrediction] = useState(null);
+      const [patterns, setPatterns] = useState(null);
+      const [confidence, setConfidence] = useState(null);
+      const [loading, setLoading] = useState(false);
+
+      useEffect(() => {
+        const outcomes = generateOutcomes();
+        const analyzedPatterns = analyzePatterns(outcomes);
+        setPatterns(analyzedPatterns);
+      }, []);
+
+      const validateInput = (value) => {
+        const num = parseInt(value);
+        return !isNaN(num) && num >= 0 && num <= 9;
       };
-    }
-    
-    patterns[key][outcome.result.size.toLowerCase()]++;
-    patterns[key][outcome.result.color.toLowerCase()]++;
-    patterns[key].numbers[outcome.result.number]++;
-    patterns[key].total++;
-  });
-  
-  return patterns;
-};
 
-const PredictionSystem = () => {
-  const [lastNumber, setLastNumber] = useState('');
-  const [secondLastNumber, setSecondLastNumber] = useState('');
-  const [prediction, setPrediction] = useState(null);
-  const [patterns, setPatterns] = useState(null);
-  const [confidence, setConfidence] = useState(null);
-  const [loading, setLoading] = useState(false);
+      const handleReset = () => {
+        setLastNumber('');
+        setSecondLastNumber('');
+        setPrediction(null);
+        setConfidence(null);
+      };
 
-  useEffect(() => {
-    const outcomes = generateOutcomes();
-    const analyzedPatterns = analyzePatterns(outcomes);
-    setPatterns(analyzedPatterns);
-  }, []);
+      const handlePredict = async () => {
+        if (!validateInput(lastNumber) || !validateInput(secondLastNumber)) {
+          setPrediction({ error: 'Please enter valid numbers (0-9)' });
+          return;
+        }
 
-  const validateInput = (value) => {
-    const num = parseInt(value);
-    return !isNaN(num) && num >= 0 && num <= 9;
-  };
+        setLoading(true);
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
-  const handleReset = () => {
-    setLastNumber('');
-    setSecondLastNumber('');
-    setPrediction(null);
-    setConfidence(null);
-  };
+        const key = `${secondLastNumber},${lastNumber}`;
+        const patternData = patterns[key];
 
-  const handlePredict = async () => {
-    if (!validateInput(lastNumber) || !validateInput(secondLastNumber)) {
-      setPrediction({ error: 'Please enter valid numbers (0-9)' });
-      return;
-    }
+        if (patternData) {
+          const total = patternData.total;
+          
+          const size = patternData.big > patternData.small ? 'Big' : 'Small';
+          const color = patternData.red > patternData.green ? 'Red' : 'Green';
+          
+          const mostLikelyNumber = patternData.numbers
+            .map((count, index) => ({ number: index, count }))
+            .sort((a, b) => b.count - a.count)[0].number;
+          
+          const sizeConfidence = Math.round((Math.max(patternData.big, patternData.small) / total) * 100);
+          const colorConfidence = Math.round((Math.max(patternData.red, patternData.green) / total) * 100);
+          const numberConfidence = Math.round((patternData.numbers[mostLikelyNumber] / total) * 100);
+          
+          setPrediction({ size, color, number: mostLikelyNumber });
+          setConfidence({ size: sizeConfidence, color: colorConfidence, number: numberConfidence });
+        } else {
+          setPrediction({ error: 'No pattern data available for these numbers' });
+          setConfidence(null);
+        }
+        
+        setLoading(false);
+      };
 
-    setLoading(true);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    const key = `${secondLastNumber},${lastNumber}`;
-    const patternData = patterns[key];
-
-    if (patternData) {
-      const total = patternData.total;
-      
-      const size = patternData.big > patternData.small ? 'Big' : 'Small';
-      const color = patternData.red > patternData.green ? 'Red' : 'Green';
-      
-      const mostLikelyNumber = patternData.numbers
-        .map((count, index) => ({ number: index, count }))
-        .sort((a, b) => b.count - a.count)[0].number;
-      
-      const sizeConfidence = Math.round((Math.max(patternData.big, patternData.small) / total) * 100);
-      const colorConfidence = Math.round((Math.max(patternData.red, patternData.green) / total) * 100);
-      const numberConfidence = Math.round((patternData.numbers[mostLikelyNumber] / total) * 100);
-      
-      setPrediction({ size, color, number: mostLikelyNumber });
-      setConfidence({ size: sizeConfidence, color: colorConfidence, number: numberConfidence });
-    } else {
-      setPrediction({ error: 'No pattern data available for these numbers' });
-      setConfidence(null);
-    }
-    
-    setLoading(false);
-  };
-
-  return (
-    <Card className="w-full max-w-md mx-auto shadow-lg">
-      <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
-        <CardTitle className="text-2xl font-bold text-center">Number Prediction</CardTitle>
-        <div className="text-sm text-center text-white/90 mt-2">
-          Small (0-4) | Big (5-9)
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6 p-6">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Second Last Number</label>
-            <Input
+      return (
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
+          <h1 className="text-2xl font-bold mb-4">Prediction System</h1>
+          <div className="mb-4">
+            <label className="block text-gray-700">Second Last Number</label>
+            <input
               type="number"
-              min="0"
-              max="9"
+              className="w-full border-gray-300 rounded-lg p-2"
               value={secondLastNumber}
               onChange={(e) => setSecondLastNumber(e.target.value)}
               placeholder="Enter number (0-9)"
-              className="w-full transition-all duration-200 focus:ring-2 focus:ring-purple-500"
             />
           </div>
-          
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Last Number</label>
-            <Input
+          <div className="mb-4">
+            <label className="block text-gray-700">Last Number</label>
+            <input
               type="number"
-              min="0"
-              max="9"
+              className="w-full border-gray-300 rounded-lg p-2"
               value={lastNumber}
               onChange={(e) => setLastNumber(e.target.value)}
               placeholder="Enter number (0-9)"
-              className="w-full transition-all duration-200 focus:ring-2 focus:ring-purple-500"
             />
           </div>
-        </div>
-
-        <div className="flex gap-4">
-          <Button 
+          <button
             onClick={handlePredict}
-            className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-2 transition-all duration-200"
+            className="bg-blue-500 text-white p-2 rounded-lg w-full mb-4"
             disabled={loading}
           >
-            {loading ? (
-              <div className="flex items-center justify-center">
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                Predicting...
-              </div>
-            ) : 'Predict'}
-          </Button>
-          
-          <Button 
-            onClick={handleReset}
-            variant="outline"
-            className="flex-1 border-2 border-gray-300 hover:bg-gray-100 transition-all duration-200"
-          >
+            {loading ? 'Predicting...' : 'Predict'}
+          </button>
+          <button onClick={handleReset} className="bg-gray-300 text-black p-2 rounded-lg w-full">
             Reset
-          </Button>
+          </button>
+          {prediction && !prediction.error && (
+            <div className="mt-4">
+              <p>Number: {prediction.number} ({confidence?.number}%)</p>
+              <p>Size: {prediction.size} ({confidence?.size}%)</p>
+              <p>Color: {prediction.color} ({confidence?.color}%)</p>
+            </div>
+          )}
+          {prediction?.error && (
+            <p className="text-red-500 mt-4">{prediction.error}</p>
+          )}
         </div>
+      );
+    };
 
-        {prediction && !prediction.error && (
-          <div className="space-y-3 animate-fadeIn">
-            <div className="p-4 rounded-lg bg-gradient-to-r from-purple-100 to-purple-200 shadow-sm">
-              <div className="text-center font-bold text-lg text-purple-800">
-                Predicted Number: {prediction.number}
-              </div>
-              {confidence && (
-                <div className="text-center text-sm text-purple-600">
-                  Confidence: {confidence.number}%
-                </div>
-              )}
-            </div>
-            
-            <div className={`p-4 rounded-lg shadow-sm ${
-              prediction.size === 'Big' ? 
-                'bg-gradient-to-r from-blue-100 to-blue-200' : 
-                'bg-gradient-to-r from-yellow-100 to-yellow-200'
-            }`}>
-              <div className="text-center font-bold text-lg">
-                {prediction.size}
-              </div>
-              {confidence && (
-                <div className="text-center text-sm text-gray-600">
-                  Confidence: {confidence.size}%
-                </div>
-              )}
-            </div>
-            
-            <div className={`p-4 rounded-lg shadow-sm ${
-              prediction.color === 'Green' ? 
-                'bg-gradient-to-r from-green-100 to-green-200' : 
-                'bg-gradient-to-r from-red-100 to-red-200'
-            }`}>
-              <div className="text-center font-bold text-lg">
-                {prediction.color}
-              </div>
-              {confidence && (
-                <div className="text-center text-sm text-gray-600">
-                  Confidence: {confidence.color}%
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {prediction && prediction.error && (
-          <Alert variant="destructive" className="animate-fadeIn">
-            <AlertDescription>{prediction.error}</AlertDescription>
-          </Alert>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
-
-export default PredictionSystem;
+    ReactDOM.render(<PredictionSystem />, document.getElementById('root'));
+  </script>
+</body>
+</html>
