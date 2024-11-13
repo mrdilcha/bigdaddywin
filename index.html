@@ -1,200 +1,420 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prediction System</title>
-  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Prediction System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 28rem;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(to right, #9333ea, #3b82f6);
+            padding: 1.5rem;
+            color: white;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .card-subtitle {
+            font-size: 0.875rem;
+            text-align: center;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.375rem;
+            transition: all 0.2s;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: #9333ea;
+            box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.2);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .button {
+            flex: 1;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .button-primary {
+            background: linear-gradient(to right, #9333ea, #3b82f6);
+            color: white;
+            border: none;
+        }
+
+        .button-primary:hover {
+            opacity: 0.9;
+        }
+
+        .button-outline {
+            background: white;
+            border: 2px solid #e5e7eb;
+        }
+
+        .button-outline:hover {
+            background: #f9fafb;
+        }
+
+        .prediction-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .prediction-box {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+
+        .prediction-number {
+            background: linear-gradient(to right, #f3e8ff, #e9d5ff);
+        }
+
+        .prediction-title {
+            font-size: 1.125rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .prediction-confidence {
+            font-size: 0.875rem;
+            color: #4b5563;
+            margin-top: 0.25rem;
+        }
+
+        .prediction-big {
+            background: linear-gradient(to right, #dbeafe, #bfdbfe);
+        }
+
+        .prediction-small {
+            background: linear-gradient(to right, #fef3c7, #fde68a);
+        }
+
+        .prediction-red {
+            background: linear-gradient(to right, #fee2e2, #fecaca);
+        }
+
+        .prediction-green {
+            background: linear-gradient(to right, #dcfce7, #bbf7d0);
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background-color: #fee2e2;
+            color: #991b1b;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 1.25rem;
+            height: 1.25rem;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-
-  <div id="root"></div>
-
-  <script type="text/babel">
-    const { useState, useEffect } = React;
-
-    const generateOutcomes = () => {
-      const outcomes = [];
-      const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-      
-      let lastNum = numbers[Math.floor(Math.random() * numbers.length)];
-      let secondLastNum = numbers[Math.floor(Math.random() * numbers.length)];
-      
-      for (let i = 0; i < 10000; i++) {
-        let size, color, nextNumber;
-        const sum = lastNum + secondLastNum;
-        
-        if (sum > 10) {
-          nextNumber = Math.random() < 0.8 ? 
-            numbers.slice(5).sort(() => 0.5 - Math.random())[0] :  
-            numbers.slice(0, 5).sort(() => 0.5 - Math.random())[0];
-        } else {
-          nextNumber = Math.random() < 0.8 ? 
-            numbers.slice(0, 5).sort(() => 0.5 - Math.random())[0] : 
-            numbers.slice(5).sort(() => 0.5 - Math.random())[0];
-        }
-        
-        size = nextNumber >= 5 ? 'Big' : 'Small';
-        
-        if (lastNum % 2 === 0 && secondLastNum % 2 === 0) {
-          color = Math.random() < 0.7 ? 'Red' : 'Green';
-        } else if (lastNum % 2 === 1 && secondLastNum % 2 === 1) {
-          color = Math.random() < 0.7 ? 'Green' : 'Red';
-        } else {
-          color = Math.random() < 0.5 ? 'Red' : 'Green';
-        }
-        
-        outcomes.push({
-          secondLast: secondLastNum,
-          last: lastNum,
-          result: { size, color, number: nextNumber }
-        });
-        
-        secondLastNum = lastNum;
-        lastNum = nextNumber;
-      }
-      
-      return outcomes;
-    };
-
-    const analyzePatterns = (outcomes) => {
-      const patterns = {};
-      
-      outcomes.forEach(outcome => {
-        const key = `${outcome.secondLast},${outcome.last}`;
-        if (!patterns[key]) {
-          patterns[key] = {
-            big: 0,
-            small: 0,
-            red: 0,
-            green: 0,
-            numbers: Array(10).fill(0),
-            total: 0
-          };
-        }
-        
-        patterns[key][outcome.result.size.toLowerCase()]++;
-        patterns[key][outcome.result.color.toLowerCase()]++;
-        patterns[key].numbers[outcome.result.number]++;
-        patterns[key].total++;
-      });
-      
-      return patterns;
-    };
-
-    const PredictionSystem = () => {
-      const [lastNumber, setLastNumber] = useState('');
-      const [secondLastNumber, setSecondLastNumber] = useState('');
-      const [prediction, setPrediction] = useState(null);
-      const [patterns, setPatterns] = useState(null);
-      const [confidence, setConfidence] = useState(null);
-      const [loading, setLoading] = useState(false);
-
-      useEffect(() => {
-        const outcomes = generateOutcomes();
-        const analyzedPatterns = analyzePatterns(outcomes);
-        setPatterns(analyzedPatterns);
-      }, []);
-
-      const validateInput = (value) => {
-        const num = parseInt(value);
-        return !isNaN(num) && num >= 0 && num <= 9;
-      };
-
-      const handleReset = () => {
-        setLastNumber('');
-        setSecondLastNumber('');
-        setPrediction(null);
-        setConfidence(null);
-      };
-
-      const handlePredict = async () => {
-        if (!validateInput(lastNumber) || !validateInput(secondLastNumber)) {
-          setPrediction({ error: 'Please enter valid numbers (0-9)' });
-          return;
-        }
-
-        setLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        const key = `${secondLastNumber},${lastNumber}`;
-        const patternData = patterns[key];
-
-        if (patternData) {
-          const total = patternData.total;
-          
-          const size = patternData.big > patternData.small ? 'Big' : 'Small';
-          const color = patternData.red > patternData.green ? 'Red' : 'Green';
-          
-          const mostLikelyNumber = patternData.numbers
-            .map((count, index) => ({ number: index, count }))
-            .sort((a, b) => b.count - a.count)[0].number;
-          
-          const sizeConfidence = Math.round((Math.max(patternData.big, patternData.small) / total) * 100);
-          const colorConfidence = Math.round((Math.max(patternData.red, patternData.green) / total) * 100);
-          const numberConfidence = Math.round((patternData.numbers[mostLikelyNumber] / total) * 100);
-          
-          setPrediction({ size, color, number: mostLikelyNumber });
-          setConfidence({ size: sizeConfidence, color: colorConfidence, number: numberConfidence });
-        } else {
-          setPrediction({ error: 'No pattern data available for these numbers' });
-          setConfidence(null);
-        }
-        
-        setLoading(false);
-      };
-
-      return (
-        <div className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto">
-          <h1 className="text-2xl font-bold mb-4">Prediction System</h1>
-          <div className="mb-4">
-            <label className="block text-gray-700">Second Last Number</label>
-            <input
-              type="number"
-              className="w-full border-gray-300 rounded-lg p-2"
-              value={secondLastNumber}
-              onChange={(e) => setSecondLastNumber(e.target.value)}
-              placeholder="Enter number (0-9)"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700">Last Number</label>
-            <input
-              type="number"
-              className="w-full border-gray-300 rounded-lg p-2"
-              value={lastNumber}
-              onChange={(e) => setLastNumber(e.target.value)}
-              placeholder="Enter number (0-9)"
-            />
-          </div>
-          <button
-            onClick={handlePredict}
-            className="bg-blue-500 text-white p-2 rounded-lg w-full mb-4"
-            disabled={loading}
-          >
-            {loading ? 'Predicting...' : 'Predict'}
-          </button>
-          <button onClick={handleReset} className="bg-gray-300 text-black p-2 rounded-lg w-full">
-            Reset
-          </button>
-          {prediction && !prediction.error && (
-            <div className="mt-4">
-              <p>Number: {prediction.number} ({confidence?.number}%)</p>
-              <p>Size: {prediction.size} ({confidence?.size}%)</p>
-              <p>Color: {prediction.color} ({confidence?.color}%)</p>
-            </div>
-          )}
-          {prediction?.error && (
-            <p className="text-red-500 mt-4">{prediction.error}</p>
-          )}
+<body>
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">Number Prediction</h1>
+            <div class="card-subtitle">Small (0-4) | Big (5-9)</div>
         </div>
-      );
-    };
+        <div class="card-content">
+            <div class="input-group">
+                <label class="input-label">Second Last Number</label>
+                <input type="number" id="secondLastNumber" min="0" max="9" class="input" placeholder="Enter number (0-9)">
+            </div>
+            
+            <div class="input-group">
+                <label class="input-label">Last Number</label>
+                <input type="number" id="lastNumber" min="0" max="9" class="input" placeholder="Enter number (0-9)">
+            </div>
 
-    ReactDOM.render(<PredictionSystem />, document.getElementById('root'));
-  </script>
+            <div class="button-group">
+                <button id="predictButton" class="button button-primary">
+                    <span id="buttonText">Predict</span>
+                </button>
+                <button id="resetButton" class="button button-outline">Reset</button>
+            </div>
+
+            <div id="predictionContainer" class="prediction-container hidden">
+                <div class="prediction-box prediction-number">
+                    <div class="prediction-title">Predicted Number: <span id="predictedNumber"></span></div>
+                    <div class="prediction-confidence">Confidence: <span id="numberConfidence"></span>%</div>
+                </div>
+
+                <div id="sizeBox" class="prediction-box">
+                    <div class="prediction-title"><span id="predictedSize"></span></div>
+                    <div class="prediction-confidence">Confidence: <span id="sizeConfidence"></span>%</div>
+                </div>
+
+                <div id="colorBox" class="prediction-box">
+                    <div class="prediction-title"><span id="predictedColor"></span></div>
+                    <div class="prediction-confidence">Confidence: <span id="colorConfidence"></span>%</div>
+                </div>
+            </div>
+
+            <div id="errorAlert" class="alert hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to get random element from array
+        Array.prototype.randomElement = function() {
+            return this[Math.floor(Math.random() * this.length)];
+        };
+
+        // Generate outcomes
+        function generateOutcomes() {
+            const outcomes = [];
+            const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+            
+            let lastNum = numbers[Math.floor(Math.random() * numbers.length)];
+            let secondLastNum = numbers[Math.floor(Math.random() * numbers.length)];
+            
+            for (let i = 0; i < 10000; i++) {
+                let size, color, nextNumber;
+                const sum = lastNum + secondLastNum;
+                
+                if (sum > 10) {
+                    nextNumber = Math.random() < 0.8 ? 
+                        numbers.slice(5).randomElement() : 
+                        numbers.slice(0, 5).randomElement();
+                } else {
+                    nextNumber = Math.random() < 0.8 ? 
+                        numbers.slice(0, 5).randomElement() : 
+                        numbers.slice(5).randomElement();
+                }
+                
+                size = nextNumber >= 5 ? 'Big' : 'Small';
+                
+                if (lastNum % 2 === 0 && secondLastNum % 2 === 0) {
+                    color = Math.random() < 0.7 ? 'Red' : 'Green';
+                } else if (lastNum % 2 === 1 && secondLastNum % 2 === 1) {
+                    color = Math.random() < 0.7 ? 'Green' : 'Red';
+                } else {
+                    color = Math.random() < 0.5 ? 'Red' : 'Green';
+                }
+                
+                outcomes.push({
+                    secondLast: secondLastNum,
+                    last: lastNum,
+                    result: { size, color, number: nextNumber }
+                });
+                
+                secondLastNum = lastNum;
+                lastNum = nextNumber;
+            }
+            
+            return outcomes;
+        }
+
+        // Analyze patterns
+        function analyzePatterns(outcomes) {
+            const patterns = {};
+            
+            outcomes.forEach(outcome => {
+                const key = `${outcome.secondLast},${outcome.last}`;
+                if (!patterns[key]) {
+                    patterns[key] = {
+                        big: 0,
+                        small: 0,
+                        red: 0,
+                        green: 0,
+                        numbers: Array(10).fill(0),
+                        total: 0
+                    };
+                }
+                
+                patterns[key][outcome.result.size.toLowerCase()]++;
+                patterns[key][outcome.result.color.toLowerCase()]++;
+                patterns[key].numbers[outcome.result.number]++;
+                patterns[key].total++;
+            });
+            
+            return patterns;
+        }
+
+        // DOM elements
+        const elements = {
+            secondLastNumber: document.getElementById('secondLastNumber'),
+            lastNumber: document.getElementById('lastNumber'),
+            predictButton: document.getElementById('predictButton'),
+            resetButton: document.getElementById('resetButton'),
+            buttonText: document.getElementById('buttonText'),
+            predictionContainer: document.getElementById('predictionContainer'),
+            predictedNumber: document.getElementById('predictedNumber'),
+            numberConfidence: document.getElementById('numberConfidence'),
+            predictedSize: document.getElementById('predictedSize'),
+            sizeConfidence: document.getElementById('sizeConfidence'),
+            predictedColor: document.getElementById('predictedColor'),
+            colorConfidence: document.getElementById('colorConfidence'),
+            errorAlert: document.getElementById('errorAlert'),
+            sizeBox: document.getElementById('sizeBox'),
+            colorBox: document.getElementById('colorBox')
+        };
+
+        // Generate and analyze patterns
+        const patterns = analyzePatterns(generateOutcomes());
+
+        // Validate input
+        function validateInput(value) {
+            const num = parseInt(value);
+            return !isNaN(num) && num >= 0 && num <= 9;
+        }
+
+        // Handle prediction
+        async function handlePredict() {
+            if (!validateInput(elements.secondLastNumber.value) || !validateInput(elements.lastNumber.value)) {
+                elements.errorAlert.textContent = 'Please enter valid numbers (0-9)';
+                elements.errorAlert.classList.remove('hidden');
+                elements.predictionContainer.classList.add('hidden');
+                return;
+            }
+
+            // Show loading state
+            elements.buttonText.innerHTML = '<span class="loader"></span>Predicting...';
+            elements.predictButton.disabled = true;
+            elements.errorAlert.classList.add('hidden');
+            elements.predictionContainer.classList.add('hidden');
+
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            const key = `${elements.secondLastNumber.value},${elements.lastNumber.value}`;
+            const patternData = patterns[key];
+
+            if (patternData) {
+                const total = patternData.total;
+                
+                const size = patternData.big > patternData.small ? 'Big' : 'Small';
+                const color = patternData.red > patternData.green ? 'Red' : 'Green';
+                
+                const mostLikelyNumber = patternData.numbers
+                    .map((count, index) => ({ number: index, count }))
+                    .sort((a, b) => b.count - a.count)[0].number;
+                
+                const sizeConfidence = Math.round((Math.max(patternData.big, patternData.small) / total) * 100);
+                const colorConfidence = Math.round((Math.max(patternData.red, patternData.green) / total) * 100);
+                const numberConfidence = Math.round((patternData.numbers[mostLikelyNumber] / total) * 100);
+
+                // Update UI
+                elements.predictedNumber.textContent = mostLikelyNumber;
+                elements.numberConfidence.textContent = numberConfidence;
+                
+                elements.predictedSize.textContent = size;
+                elements.sizeConfidence.textContent = sizeConfidence;
+                elements.sizeBox.className = `prediction-box prediction-${size.toLowerCase()}`;
+                
+                elements.predictedColor.textContent = color;
+                elements.colorConfidence.textContent = colorConfidence;
+                elements.colorBox.className = `prediction-box prediction-${color.toLowerCase()}`;
+
+                elements.predictionContainer.classList.remove('hidden');
+            } else {
+                elements.errorAlert.textContent = 'No pattern data available for these numbers';
+                elements.errorAlert.classList.remove('hidden');
+            }
+
+            // Reset button state
+            elements.buttonText.textContent = 'Predict';
+            elements.predictButton.disabled = false;
+        }
+
+        // Handle reset
+        function handleReset() {
+            elements.secondLastNumber.value = '';
+            elements.lastNumber.value = '';
+            elements.predictionContainer.classList.add('hidden');
+            elements.errorAlert.classList.add('hidden');
+        }
+
+        // Event listeners
+        elements.predictButton.addEventListener('click', handlePredict);
+        elements.resetButton.addEventListener('click', handleReset);
+    </script>
 </body>
 </html>
