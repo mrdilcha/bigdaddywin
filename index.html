@@ -1,228 +1,265 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bigdaddy Vip Hack</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f5f5f5;
-        }
-        .container {
-            text-align: center;
-            padding: 20px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            font-size: 24px;
-            color: #0056b3;
-        }
-        .countdown-container {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: gold;
-            padding: 20px;
-            border-radius: 10px;
-            width: 120px;
-            margin: 20px auto;
-        }
-        .period-number {
-            font-size: 1.4em;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-        .prediction {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 8px 12px;
-            font-size: 1.2em;
-            border-radius: 5px;
-            color: white;
-            width: 90px;
-            text-align: center;
-        }
-        .visit-site-btn {
-            display: inline-block;
-            margin-top: 20px;
-            font-size: 1.2em;
-            font-weight: bold;
-            padding: 12px 24px;
-            color: white;
-            background-color: #0056b3;
-            text-align: center;
-            border-radius: 8px;
-            text-decoration: none;
-        }
-        .scroll-container {
-            margin-top: 40px;
-            max-height: 50vh;
-            overflow-y: auto;
-            padding-top: 10px;
-            border-top: 2px solid #ddd;
-            margin-bottom: 20px;
-        }
-        .period {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            font-weight: bold;
-            border-bottom: 1px solid #ddd;
-        }
-        /* Popup */
-        .popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .popup-content {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .popup-content button {
-            margin-top: 10px;
-            padding: 10px 20px;
-            font-size: 1em;
-            border: none;
-            cursor: pointer;
-        }
-        .visit-site-popup {
-            background-color: #0056b3;
-            color: white;
-        }
-        .close-popup {
-            background-color: #999;
-            color: white;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1> Bigdaddy Vip Hack</h1>
-        <div id="countdown" class="countdown-container">60s</div>
-        <div id="currentPeriod" class="period-number">Calculating...</div>
-        <a href="www.google.com" class="visit-site-btn">Visit Site</a>
-        <div class="scroll-container">
-            <div id="previousPeriods"></div>
+// Generate 10,000 outcomes with patterns
+const generateOutcomes = () => {
+  const outcomes = [];
+  const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  
+  let lastNum = numbers[Math.floor(Math.random() * numbers.length)];
+  let secondLastNum = numbers[Math.floor(Math.random() * numbers.length)];
+  
+  for (let i = 0; i < 10000; i++) {
+    let size, color, nextNumber;
+    const sum = lastNum + secondLastNum;
+    
+    // Size patterns (Big: 5-9, Small: 0-4)
+    if (sum > 10) {
+      nextNumber = Math.random() < 0.8 ? 
+        numbers.slice(5).randomElement() :  // 5-9
+        numbers.slice(0, 5).randomElement(); // 0-4
+    } else {
+      nextNumber = Math.random() < 0.8 ? 
+        numbers.slice(0, 5).randomElement() : // 0-4
+        numbers.slice(5).randomElement();     // 5-9
+    }
+    
+    size = nextNumber >= 5 ? 'Big' : 'Small';
+    
+    // Color patterns
+    if (lastNum % 2 === 0 && secondLastNum % 2 === 0) {
+      color = Math.random() < 0.7 ? 'Red' : 'Green';
+    } else if (lastNum % 2 === 1 && secondLastNum % 2 === 1) {
+      color = Math.random() < 0.7 ? 'Green' : 'Red';
+    } else {
+      color = Math.random() < 0.5 ? 'Red' : 'Green';
+    }
+    
+    outcomes.push({
+      secondLast: secondLastNum,
+      last: lastNum,
+      result: { size, color, number: nextNumber }
+    });
+    
+    secondLastNum = lastNum;
+    lastNum = nextNumber;
+  }
+  
+  return outcomes;
+};
+
+// Add this helper method to Array prototype
+Array.prototype.randomElement = function() {
+  return this[Math.floor(Math.random() * this.length)];
+};
+
+// Analyze patterns in the data
+const analyzePatterns = (outcomes) => {
+  const patterns = {};
+  
+  outcomes.forEach(outcome => {
+    const key = `${outcome.secondLast},${outcome.last}`;
+    if (!patterns[key]) {
+      patterns[key] = {
+        big: 0,
+        small: 0,
+        red: 0,
+        green: 0,
+        numbers: Array(10).fill(0),
+        total: 0
+      };
+    }
+    
+    patterns[key][outcome.result.size.toLowerCase()]++;
+    patterns[key][outcome.result.color.toLowerCase()]++;
+    patterns[key].numbers[outcome.result.number]++;
+    patterns[key].total++;
+  });
+  
+  return patterns;
+};
+
+const PredictionSystem = () => {
+  const [lastNumber, setLastNumber] = useState('');
+  const [secondLastNumber, setSecondLastNumber] = useState('');
+  const [prediction, setPrediction] = useState(null);
+  const [patterns, setPatterns] = useState(null);
+  const [confidence, setConfidence] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const outcomes = generateOutcomes();
+    const analyzedPatterns = analyzePatterns(outcomes);
+    setPatterns(analyzedPatterns);
+  }, []);
+
+  const validateInput = (value) => {
+    const num = parseInt(value);
+    return !isNaN(num) && num >= 0 && num <= 9;
+  };
+
+  const handleReset = () => {
+    setLastNumber('');
+    setSecondLastNumber('');
+    setPrediction(null);
+    setConfidence(null);
+  };
+
+  const handlePredict = async () => {
+    if (!validateInput(lastNumber) || !validateInput(secondLastNumber)) {
+      setPrediction({ error: 'Please enter valid numbers (0-9)' });
+      return;
+    }
+
+    setLoading(true);
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const key = `${secondLastNumber},${lastNumber}`;
+    const patternData = patterns[key];
+
+    if (patternData) {
+      const total = patternData.total;
+      
+      const size = patternData.big > patternData.small ? 'Big' : 'Small';
+      const color = patternData.red > patternData.green ? 'Red' : 'Green';
+      
+      const mostLikelyNumber = patternData.numbers
+        .map((count, index) => ({ number: index, count }))
+        .sort((a, b) => b.count - a.count)[0].number;
+      
+      const sizeConfidence = Math.round((Math.max(patternData.big, patternData.small) / total) * 100);
+      const colorConfidence = Math.round((Math.max(patternData.red, patternData.green) / total) * 100);
+      const numberConfidence = Math.round((patternData.numbers[mostLikelyNumber] / total) * 100);
+      
+      setPrediction({ size, color, number: mostLikelyNumber });
+      setConfidence({ size: sizeConfidence, color: colorConfidence, number: numberConfidence });
+    } else {
+      setPrediction({ error: 'No pattern data available for these numbers' });
+      setConfidence(null);
+    }
+    
+    setLoading(false);
+  };
+
+  return (
+    <Card className="w-full max-w-md mx-auto shadow-lg">
+      <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-t-lg">
+        <CardTitle className="text-2xl font-bold text-center">Number Prediction</CardTitle>
+        <div className="text-sm text-center text-white/90 mt-2">
+          Small (0-4) | Big (5-9)
         </div>
-    </div>
-
-    <!-- Popup -->
-    <div class="popup" id="popup">
-        <div class="popup-content">
-            <p>You are not registered through our link.
-This prediction will only work if you are registered through our official link.
-Please register under our link and deposit a minimum of 100 INR first.
-Click on visit site to register in diu win.</p>
-            <button class="visit-site-popup" onclick="visitSite()">Visit Site</button>
-            <button class="close-popup" onclick="closePopup()">Close Popup</button>
+      </CardHeader>
+      <CardContent className="space-y-6 p-6">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Second Last Number</label>
+            <Input
+              type="number"
+              min="0"
+              max="9"
+              value={secondLastNumber}
+              onChange={(e) => setSecondLastNumber(e.target.value)}
+              placeholder="Enter number (0-9)"
+              className="w-full transition-all duration-200 focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Last Number</label>
+            <Input
+              type="number"
+              min="0"
+              max="9"
+              value={lastNumber}
+              onChange={(e) => setLastNumber(e.target.value)}
+              placeholder="Enter number (0-9)"
+              className="w-full transition-all duration-200 focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
         </div>
-    </div>
 
-    <audio id="beep" src="beep.mp3"></audio>
+        <div className="flex gap-4">
+          <Button 
+            onClick={handlePredict}
+            className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-2 transition-all duration-200"
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="flex items-center justify-center">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Predicting...
+              </div>
+            ) : 'Predict'}
+          </Button>
+          
+          <Button 
+            onClick={handleReset}
+            variant="outline"
+            className="flex-1 border-2 border-gray-300 hover:bg-gray-100 transition-all duration-200"
+          >
+            Reset
+          </Button>
+        </div>
 
-    <script>
-        const basePeriodNumber = 2024111310001050n;
-        const baseTime = new Date("2024-11-12T10:26:00+05:30");
-        const countdownElement = document.getElementById("countdown");
-        const beepSound = document.getElementById("beep");
-
-        let currentPrediction = getRandomPrediction();
-        let previousPredictions = Array.from({ length: 10 }, () => getRandomPrediction()); // 10 previous periods
-
-        function getRandomPrediction() {
-            const prediction = Math.random() < 0.5 ? "BIG" : "SMALL";
-            const color = Math.random() < 0.5 ? "red" : "green"; // Random color independent of prediction
-            return { prediction, color };
-        }
-
-        function calculatePeriodNumber() {
-            const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-            const elapsedMinutes = Math.floor((now - baseTime) / 60000);
-            const periodIncrement = BigInt(elapsedMinutes);
-            return basePeriodNumber + periodIncrement;
-        }
-
-        function updatePeriods() {
-            const currentPeriod = calculatePeriodNumber();
-
-            // Move current prediction to previous before updating
-            previousPredictions.unshift(currentPrediction);
-            if (previousPredictions.length > 10) previousPredictions.pop(); // Only keep 10 previous periods
-
-            // Display the current period and prediction
-            document.getElementById("currentPeriod").innerHTML = `
-                ${currentPeriod}
-                <span class="prediction" style="background-color: ${currentPrediction.color};">${currentPrediction.prediction}</span>
-            `;
-
-            // Display previous periods with predictions
-            document.getElementById("previousPeriods").innerHTML = previousPredictions.map((prev, index) => `
-                <div class="period">
-                    ${currentPeriod - BigInt(index + 1)}
-                    <span class="prediction" style="background-color: ${prev.color};">${prev.prediction}</span>
+        {prediction && !prediction.error && (
+          <div className="space-y-3 animate-fadeIn">
+            <div className="p-4 rounded-lg bg-gradient-to-r from-purple-100 to-purple-200 shadow-sm">
+              <div className="text-center font-bold text-lg text-purple-800">
+                Predicted Number: {prediction.number}
+              </div>
+              {confidence && (
+                <div className="text-center text-sm text-purple-600">
+                  Confidence: {confidence.number}%
                 </div>
-            `).join('');
+              )}
+            </div>
+            
+            <div className={`p-4 rounded-lg shadow-sm ${
+              prediction.size === 'Big' ? 
+                'bg-gradient-to-r from-blue-100 to-blue-200' : 
+                'bg-gradient-to-r from-yellow-100 to-yellow-200'
+            }`}>
+              <div className="text-center font-bold text-lg">
+                {prediction.size}
+              </div>
+              {confidence && (
+                <div className="text-center text-sm text-gray-600">
+                  Confidence: {confidence.size}%
+                </div>
+              )}
+            </div>
+            
+            <div className={`p-4 rounded-lg shadow-sm ${
+              prediction.color === 'Green' ? 
+                'bg-gradient-to-r from-green-100 to-green-200' : 
+                'bg-gradient-to-r from-red-100 to-red-200'
+            }`}>
+              <div className="text-center font-bold text-lg">
+                {prediction.color}
+              </div>
+              {confidence && (
+                <div className="text-center text-sm text-gray-600">
+                  Confidence: {confidence.color}%
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
-            // After 1.5 seconds, generate new random prediction for current
-            setTimeout(() => {
-                currentPrediction = getRandomPrediction();
-            }, 1500);
-        }
+        {prediction && prediction.error && (
+          <Alert variant="destructive" className="animate-fadeIn">
+            <AlertDescription>{prediction.error}</AlertDescription>
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
-        function startCountdown() {
-            const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-            let secondsLeft = 60 - now.getSeconds();
-
-            countdownElement.textContent = `${secondsLeft}s`;
-
-            const interval = setInterval(() => {
-                countdownElement.textContent = `${secondsLeft}s`;
-
-                if (secondsLeft <= 5 && secondsLeft > 0) {
-                    beepSound.play();
-                }
-
-                if (secondsLeft === 0) {
-                    updatePeriods();
-                    secondsLeft = 60;
-                } else {
-                    secondsLeft--;
-                }
-            }, 1000);
-        }
-
-        function visitSite() {
-            window.location.href = 'https://diuwin.bet/#/register?invitationCode=344863925441'; // Placeholder website
-        }
-
-        function closePopup() {
-            document.getElementById("popup").style.display = "none";
-        }
-
-        window.onload = function() {
-            updatePeriods();
-            startCountdown();
-        };
-    </script>
-</body>
-</html>
+export default PredictionSystem;
